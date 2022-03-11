@@ -22,8 +22,6 @@ options {
         };
         forward only;
 
-        notify yes;
-        also-notify { 10.200.203.100; };
 };
 
 logging {

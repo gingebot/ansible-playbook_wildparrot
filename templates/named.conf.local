@@ -10,6 +10,9 @@ view "internal" {
                 key "dynamic.internal.scratch.codyroad.online";
                 internalips; };
 
+        notify yes;
+        also-notify { 10.200.203.100 key "master-slave-internal"; };
+
         allow-transfer { key "master-slave-internal"; };
 
         zone "codyroad.online" IN {
@@ -41,6 +44,9 @@ view "external" {
                 key "mobydick";
                 key "dynamic.external.codyroad.online";
                 any; };
+
+        notify yes;
+        also-notify { 10.200.203.100 key "master-slave-external"; };
         allow-transfer { key "master-slave-external"; };
 
         zone "." {
