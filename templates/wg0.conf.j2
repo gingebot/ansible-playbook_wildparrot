@@ -1,0 +1,9 @@
+[Interface]
+Address = 10.1.2.2/24
+PrivateKey = {{ wg.interface.privatekey }}
+
+[Peer]
+PublicKey = {{ wg.peer.publickey }}
+AllowedIPs = 10.1.2.1/24,10.200.0.0/16
+Endpoint = home.codyroad.online:51821
+PersistentKeepAlive = 15

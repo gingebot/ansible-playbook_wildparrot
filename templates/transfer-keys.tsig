@@ -1,0 +1,7 @@
+{% for item in tsigs.values() %}
+key {{ item.name }} {
+        algorithm {{ item.algo }} ;
+        secret "{{ item.secret }}" ;
+};
+
+{% endfor %}

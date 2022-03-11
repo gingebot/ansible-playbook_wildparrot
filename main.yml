@@ -1,0 +1,37 @@
+---
+- name: Wild Parrot Configurator
+  hosts: wildparrot
+  vars_files:
+    - vars/tsig.yml
+    - vars/zones.yml
+    - vars/wg.yml
+  tasks:
+    - name: Fail on not Ubuntu
+      fail:
+        msg: Currently only ubuntu is supported
+      when: ansible_distribution != 'Ubuntu'
+
+    - name: Set hostname
+      hostname:
+       name: wildparrot.codyroad.online
+ 
+    - name: set iptables rules
+      include_tasks:
+        file: firewall.yml
+    - name: configure wireguard
+      include_tasks:
+        file: wireguard.yml
+
+    - name: install and configure bind
+      include_tasks:
+        file: bind.yml
+
+
+  handlers:
+    - name: restart bind
+      service: 
+        name: bind9
+        state: restarted
+
+    - name: Sync zones
+      shell: rndc sync -clean

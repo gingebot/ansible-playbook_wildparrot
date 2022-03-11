@@ -1,0 +1,64 @@
+include "/etc/bind/transfer-keys.tsig" ;
+
+view "internal" {
+        match-clients {
+                !key "elephant";
+                !key "shep";
+                !key "mobydick";
+                !key "dynamic.external.codyroad.online";
+                key "dynamic.internal.codyroad.online";
+                key "dynamic.internal.scratch.codyroad.online";
+                internalips; };
+
+        allow-transfer { key "master-slave-internal"; };
+
+        zone "codyroad.online" IN {
+                type master;
+                file "/etc/bind/zones/db.codyroad.online.internal";
+                
+                update-policy {
+                grant dynamic.internal.codyroad.online subdomain codyroad.online. ;
+                };
+        };
+
+        zone "scratch.codyroad.online" IN {
+                type master;
+                file "/etc/bind/zones/db.scratch.codyroad.online.internal";
+
+                update-policy {
+                grant dynamic.internal.scratch.codyroad.online subdomain scratch.codyroad.online. ;
+                };
+        };
+        include "/etc/bind/named.conf.default-zones";
+
+};
+
+
+view "external" {
+        match-clients {
+                key "elephant";
+                key "shep";
+                key "mobydick";
+                key "dynamic.external.codyroad.online";
+                any; };
+        allow-transfer { key "master-slave-external"; };
+
+        zone "." {
+              type hint;
+              file "/usr/share/dns/root.hints";
+        };
+
+        zone "codyroad.online" IN {
+                type master;
+                file "/etc/bind/zones/db.codyroad.online.external";
+
+                update-policy {
+                grant dynamic.external.codyroad.online subdomain codyroad.online ;
+                grant mobydick subdomain mobydick.codyroad.online. TXT ;
+                grant elephant subdomain elephnat.codyroad.online. TXT ;
+                grant shep subdomain shep.codyroad.online. TXT ;
+                };
+
+        };
+};
+

@@ -1,0 +1,58 @@
+acl internalips {
+        !key master-slave-external;
+        10.200.192.0/19;
+        10.1.1.0/24;
+        10.1.2.0/24;
+        127.0.0.0/8;
+        ::1;
+};
+
+options {
+        directory "/var/cache/bind";
+        dnssec-validation auto;
+        listen-on port 53 { any; };
+
+        recursion yes;
+        allow-recursion { internalips; };
+        allow-query { any; };
+
+        forwarders {
+        8.8.8.8;
+        8.8.4.4;
+        };
+        forward only;
+
+        notify yes;
+        also-notify { 10.200.203.100; };
+};
+
+logging {
+        channel zone_transfers_log {
+                file "/var/log/named/zone_transfer" versions 3 size 20m;
+                print-time yes;
+                print-category yes;
+                print-severity yes;
+                severity info;
+        };
+        category notify { zone_transfers_log; };
+        category xfer-in { zone_transfers_log; };
+        category xfer-out { zone_transfers_log; };
+
+        channel query_log {
+                file "/var/log/named/query_log" versions 3 size 20m;
+                print-time yes;
+                print-category yes;
+                print-severity yes;
+                severity debug;
+        };
+        channel update_file {
+                file "/var/log/named/update.log" versions 3 size 5m;
+                severity dynamic;
+                print-time yes;
+        };
+
+        category default { query_log; };
+        category client { query_log; };
+        category queries  { query_log; };
+        category update { update_file; };
+};

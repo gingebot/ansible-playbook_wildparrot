@@ -1,0 +1,84 @@
+---
+- name: Install bind
+  apt:
+    name: bind9
+    state: latest
+
+- name: Install pythondns, for nsupdates
+  shell: python3 -m pip install dnspython
+
+- name: Update apparmor for zones directory
+  copy:
+    dest: /etc/apparmor.d/local/usr.sbin.named
+    content: /etc/bind/zones/** rw,
+  register: apparmor_updated
+  
+- name: Reload apparmor rules
+  service:
+    name: apparmor
+    state: restarted
+  when: apparmor_updated.changed
+
+- name: Create required bind directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: bind
+    group: bind
+    mode: '0755'
+  with_items:
+    - /var/log/named/
+    - /etc/bind/zones/
+
+- name: Set bind config
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - src: templates/named.conf.options
+      dest: /etc/bind/named.conf.options
+    - src: templates/named.conf.local
+      dest: /etc/bind/named.conf.local
+    - src: templates/transfer-keys.tsig
+      dest: /etc/bind/transfer-keys.tsig
+    - src: templates/named.conf 
+      dest: /etc/bind/named.conf
+  register: bind_config_update
+
+- name: check bind config
+  shell: named-checkconf /etc/bind/named.conf
+  register: checkconf
+  when: bind_config_update.changed
+  failed_when: "checkconf.rc != 0"
+  notify: restart bind
+
+- name: Copy zone files if not present
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    force: no
+  with_items:
+    - src: files/db.codyroad.online.external
+      dest: /etc/bind/zones/db.codyroad.online.external
+    - src: files/db.codyroad.online.internal
+      dest: /etc/bind/zones/db.codyroad.online.internal
+    - src: files/db.scratch.codyroad.online.internal
+      dest: /etc/bind/zones/db.scratch.codyroad.online.internal
+  notify: restart bind
+
+
+
+- name: Create DNS Records
+  nsupdate:
+    key_name: "{{ item.0.key_name }}"
+    key_secret: "{{ item.0.key_secret }}"
+    key_algorithm: "{{ item.0.key_algo }}"
+    server: "127.0.0.1"
+    state: "{{ item.1.state }}"
+    zone: "{{ item.0.zone }}"
+    record: "{{ item.1.record }}"
+    value: "{{ item.1.value }}"
+    type: "{{ item.1.type }}"
+    ttl: "{{ item.1.ttl }}"
+  loop: "{{ zones|subelements('records') }}"
+  notify: Sync zones
