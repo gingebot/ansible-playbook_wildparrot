@@ -61,7 +61,7 @@ view "external" {
                 update-policy {
                 grant dynamic.external.codyroad.online subdomain codyroad.online ;
                 grant mobydick subdomain mobydick.codyroad.online. TXT ;
-                grant elephant subdomain elephnat.codyroad.online. TXT ;
+                grant elephant subdomain codyroad.online. TXT ;
                 grant shep subdomain shep.codyroad.online. TXT ;
                 };
 
